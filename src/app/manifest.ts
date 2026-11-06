@@ -1,0 +1,17 @@
+import type { MetadataRoute } from "next";
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: "Byte",
+    short_name: "Byte",
+    description: "A tiny nutrition log.",
+    start_url: "/",
+    display: "standalone",
+    background_color: "#f4f3ef",
+    theme_color: "#f4f3ef",
+    icons: [
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+  };
+}

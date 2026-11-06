@@ -1,0 +1,31 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# build output
+/.next/
+/out/
+/build
+/coverage
+*.tsbuildinfo
+next-env.d.ts
+
+# env / secrets (only .env.example is public)
+.env*
+!.env.example
+*.pem
+*.key
+
+# deploy
+.vercel
+
+# local tooling / editors
+.claude/
+.impeccable/
+.idea/
+.vscode/
+.DS_Store
+
+# logs
+*.log
