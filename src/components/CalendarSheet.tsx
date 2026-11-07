@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { Calendar } from "@/lib/types";
-import { ChevronLeft, ChevronRight } from "./Icons";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { Sheet } from "./Sheet";
 
 const DOW = ["S", "M", "T", "W", "T", "F", "S"];
@@ -22,14 +22,14 @@ export function CalendarSheet({ selected, onPick, onClose }: Props) {
     <Sheet title="Jump to date" onClose={onClose}>
       <div className="cal-head">
         <button className="icon-btn" onClick={() => cal && setMonth(cal.prev)} aria-label="Previous month">
-          <ChevronLeft />
+          <CaretLeft size={22} />
         </button>
         <strong>{cal?.label ?? " "}</strong>
         <button className="icon-btn" onClick={() => cal?.next && setMonth(cal.next)} disabled={!cal?.next} aria-label="Next month">
-          <ChevronRight />
+          <CaretRight size={22} />
         </button>
       </div>
-      <div className="cal-grid">
+      <div key={month} className="cal-grid enter">
         {DOW.map((d, i) => (
           <div key={i} className="cal-dow">{d}</div>
         ))}

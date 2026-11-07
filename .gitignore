@@ -29,3 +29,6 @@ next-env.d.ts
 
 # logs
 *.log
+
+# temporary mock data (has your email)
+supabase/mock.sql

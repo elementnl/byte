@@ -10,9 +10,21 @@
   --danger: #e5383b;
   --track: #e9e7e0;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.06);
-  --radius: 22px;
+  --radius: 11px;
   --safe-top: env(safe-area-inset-top);
   --safe-bottom: env(safe-area-inset-bottom);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1); /* ease-out, no overshoot */
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+  --fast: 0.15s;
+  --base: 0.25s;
+  --tabbar-h: 76px; /* floating bar: 64px pill + 12px gap */
+  --glass-tint: oklch(1 0 0 / 14%);
+  --glass-rim: inset 1px 1px 0 -0.5px oklch(1 0 0 / 85%), inset -1px -1px 0 -0.5px oklch(1 0 0 / 55%), inset 0 0 0 0.5px oklch(1 0 0 / 40%), inset 0 0 12px -4px oklch(1 0 0 / 60%);
+  --glass-shadow: 0 1px 2px oklch(0 0 0 / 6%), 0 10px 32px -8px oklch(0 0 0 / 22%);
+  --glass-shadow-soft: 0 1px 2px oklch(0 0 0 / 3%), 0 10px 32px -8px oklch(0 0 0 / 11%);
+  --glass-foreground: oklch(0.18 0.004 286);
+  --glass-highlight: oklch(1 0 0 / 62%);
+  --glass-active: oklch(0.6 0.2 255);
   color-scheme: light;
 }
 
@@ -27,6 +39,13 @@
   --pro: #5b8cff;
   --track: #262622;
   --shadow: none;
+  --glass-tint: oklch(0.2 0.004 286 / 22%);
+  --glass-rim: inset 1px 1px 0 -0.5px oklch(1 0 0 / 45%), inset -1px -1px 0 -0.5px oklch(1 0 0 / 22%), inset 0 0 0 0.5px oklch(1 0 0 / 16%), inset 0 0 12px -4px oklch(1 0 0 / 22%);
+  --glass-shadow: 0 1px 2px oklch(0 0 0 / 20%), 0 12px 36px -8px oklch(0 0 0 / 50%);
+  --glass-shadow-soft: 0 1px 2px oklch(0 0 0 / 10%), 0 12px 36px -8px oklch(0 0 0 / 25%);
+  --glass-foreground: oklch(0.98 0 0);
+  --glass-highlight: oklch(1 0 0 / 16%);
+  --glass-active: oklch(0.72 0.16 255);
   color-scheme: dark;
 }
 
@@ -73,14 +92,167 @@ button:disabled {
   max-width: 480px;
   min-height: 100dvh;
   margin: 0 auto;
-  padding: calc(var(--safe-top) + 16px) 20px calc(var(--safe-bottom) + 120px);
+  padding: 0 20px calc(var(--safe-bottom) + var(--tabbar-h) + 24px);
 }
 
-.topbar {
+/* iOS-style top bar: small centered title, translucent, sticks to the top */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 56px 1fr 56px;
+  align-items: center;
+  min-height: calc(var(--safe-top) + 52px);
+  margin: 0 -20px;
+  padding: var(--safe-top) 8px 0;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 0.5px solid var(--border);
+}
+
+.nav-side {
+  display: flex;
+}
+
+.nav-right {
+  justify-content: flex-end;
+}
+
+.nav-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 5px;
+  text-align: center;
+  font: inherit;
+}
+
+button.nav-title:active {
+  background: var(--surface-2);
+}
+
+.nav-title strong {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.nav-title small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.nav-side .icon-btn:disabled {
+  opacity: 0.2;
+}
+
+/* Floating liquid-glass tab bar (iOS 26 style) */
+.glass {
+  background: var(--glass-tint);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
+}
+
+.glass-tabbar {
+  position: fixed;
+  left: 50%;
+  bottom: max(6px, calc(var(--safe-bottom) - 12px));
+  z-index: 30;
+  transform: translateX(-50%);
+  padding: 4px;
+  border-radius: 999px;
+}
+
+.glass-tabbar-row {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 44px;
+}
+
+.glass-tabbar-pill {
+  position: absolute;
+  opacity: 0;
+  border-radius: 999px;
+  background: var(--glass-highlight);
+  box-shadow: var(--glass-rim);
+}
+
+.glass-tabbar-pill[data-ready] {
+  transition:
+    left 0.45s var(--ease),
+    width 0.45s var(--ease);
+}
+
+.glass-tab {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 56px;
+  min-width: 72px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--glass-foreground);
+  text-decoration: none;
+  transition:
+    color 0.3s,
+    transform 0.3s;
+}
+
+/* Same glass, used as an in-page segmented control (less rounded, text only) */
+.glass-seg {
+  box-shadow: var(--glass-rim), var(--glass-shadow-soft); /* half the tab bar's shadow */
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.glass-seg .glass-tabbar-pill {
+  border-radius: 6px;
+}
+
+.glass-seg-item {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  height: 40px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--glass-foreground);
+  transition:
+    color 0.3s,
+    transform 0.3s;
+}
+
+.glass-seg-item:active {
+  transform: scale(0.95);
+}
+
+.glass-seg-item[aria-current="page"] {
+  color: var(--glass-active);
+}
+
+.glass-tab:active {
+  transform: scale(0.95);
+}
+
+.glass-tab svg {
+  width: 24px;
+  height: 24px;
+}
+
+.glass-tab[aria-current="page"] {
+  color: var(--glass-active);
 }
 
 .wordmark {
@@ -99,19 +271,12 @@ button:disabled {
   place-items: center;
   width: 44px;
   height: 44px;
-  border-radius: 50%;
+  border-radius: 11px;
   color: var(--text);
 }
 
 .icon-btn:active {
   background: var(--surface-2);
-}
-
-.title {
-  font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
 }
 
 /* ---------- splash ---------- */
@@ -137,48 +302,13 @@ button:disabled {
   }
 }
 
-/* ---------- date nav ---------- */
-
-.datenav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 20px 0 8px;
-}
-
-.datenav-label {
-  text-align: center;
-  padding: 6px 14px;
-  border-radius: 14px;
-}
-
-.datenav-label:active {
-  background: var(--surface-2);
-}
-
-.datenav-label strong {
-  display: block;
-  font-family: var(--font-display);
-  font-size: 28px;
-  letter-spacing: -0.03em;
-}
-
-.datenav-label small {
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.datenav .icon-btn:disabled {
-  opacity: 0.2;
-}
-
 /* ---------- rings ---------- */
 
 .rings {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin: 16px 0 28px;
+  margin: 12px 0 28px;
 }
 
 .ring-card {
@@ -212,7 +342,7 @@ button:disabled {
 }
 
 .ring .bar {
-  transition: stroke-dashoffset 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: stroke-dashoffset 0.6s var(--ease);
 }
 
 .ring-value {
@@ -263,6 +393,32 @@ button:disabled {
   margin: 0 4px 10px;
 }
 
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.section-head .section-label {
+  margin: 0 4px;
+}
+
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 4px;
+  padding: 4px 0 4px 8px;
+  color: var(--pro);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.add-btn:active {
+  opacity: 0.5;
+}
+
 .list {
   background: var(--surface);
   border-radius: var(--radius);
@@ -276,12 +432,58 @@ button:disabled {
   justify-content: space-between;
   gap: 12px;
   width: 100%;
-  padding: 16px 18px;
+  padding: 13px 18px;
   text-align: left;
 }
 
-.row + .row {
+.swipe + .swipe {
   border-top: 1px solid var(--border);
+}
+
+/* Swipe-to-delete: the row slides left over a red Delete action */
+.swipe {
+  position: relative;
+  overflow: hidden;
+}
+
+.swipe .row {
+  position: relative;
+  background: var(--surface);
+  touch-action: pan-y; /* browser keeps vertical scroll, we handle horizontal */
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    transform 0.3s var(--ease),
+    background-color var(--base) var(--ease);
+}
+
+.swipe .row[data-dragging] {
+  transition: none;
+}
+
+.swipe-delete {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 25px; /* centers the icon in the 72px revealed area */
+  background: var(--danger);
+  color: #fff;
+}
+
+@keyframes collapse {
+  from {
+    max-height: 80px;
+  }
+  to {
+    max-height: 0;
+    opacity: 0;
+  }
+}
+
+.swipe.removing {
+  animation: collapse 0.28s var(--ease) 0.15s forwards;
 }
 
 .row:active {
@@ -289,28 +491,36 @@ button:disabled {
 }
 
 .row-name {
-  font-weight: 550;
+  flex: 1;
+  min-width: 0;
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.row-sub {
-  font-size: 13px;
-  color: var(--pro);
-  margin-top: 2px;
-}
-
-.row-cal {
-  font-weight: 600;
+.row-val {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 15px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.row-cal small {
-  color: var(--muted);
-  font-weight: 400;
-  margin-left: 3px;
+.row-val b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.row-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--muted);
+  opacity: 0.6;
 }
 
 .empty {
@@ -327,28 +537,6 @@ button:disabled {
   margin-bottom: 4px;
 }
 
-.fab {
-  position: fixed;
-  left: 50%;
-  bottom: calc(var(--safe-bottom) + 24px);
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 56px;
-  padding: 0 26px 0 22px;
-  border-radius: 28px;
-  background: var(--text);
-  color: var(--bg);
-  font-weight: 600;
-  font-size: 16px;
-  box-shadow: 0 10px 30px rgb(0 0 0 / 0.2);
-  transition: transform 0.15s;
-}
-
-.fab:active {
-  transform: translateX(-50%) scale(0.96);
-}
 
 /* ---------- sheet ---------- */
 
@@ -357,7 +545,7 @@ button:disabled {
   inset: 0;
   background: rgb(0 0 0 / 0.4);
   z-index: 40;
-  animation: fade 0.2s ease-out;
+  animation: fade 0.25s var(--ease);
 }
 
 .sheet {
@@ -369,9 +557,9 @@ button:disabled {
   margin: 0 auto;
   padding: 10px 20px calc(var(--safe-bottom) + 20px);
   background: var(--surface);
-  border-radius: 28px 28px 0 0;
+  border-radius: 14px 14px 0 0;
   z-index: 41;
-  animation: rise 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: rise 0.32s var(--ease);
   max-height: 92dvh;
   overflow-y: auto;
 }
@@ -434,14 +622,18 @@ button:disabled {
   padding: 0 16px;
   font-size: 17px; /* ≥16px stops iOS zoom-on-focus */
   border: 1.5px solid var(--border);
-  border-radius: 16px;
+  border-radius: 8px;
   background: var(--bg);
   outline: none;
-  transition: border-color 0.15s;
+  transition:
+    border-color var(--base) var(--ease),
+    box-shadow var(--base) var(--ease),
+    background-color var(--base) var(--ease);
 }
 
 .input:focus {
   border-color: var(--text);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--text) 8%, transparent);
 }
 
 .split {
@@ -452,7 +644,7 @@ button:disabled {
 
 .btn {
   height: 54px;
-  border-radius: 16px;
+  border-radius: 8px;
   background: var(--text);
   color: var(--bg);
   font-weight: 600;
@@ -505,7 +697,7 @@ button:disabled {
 .cal-day {
   position: relative;
   aspect-ratio: 1;
-  border-radius: 50%;
+  border-radius: 25%;
   font-variant-numeric: tabular-nums;
   font-size: 16px;
 }
@@ -561,13 +753,13 @@ button:disabled {
   display: grid;
   grid-template-columns: 1fr 1fr;
   padding: 4px;
-  border-radius: 16px;
+  border-radius: 8px;
   background: var(--surface-2);
 }
 
 .segmented button {
   height: 44px;
-  border-radius: 12px;
+  border-radius: 6px;
   font-weight: 600;
   color: var(--muted);
 }
@@ -587,6 +779,7 @@ button:disabled {
 /* ---------- login ---------- */
 
 .login {
+  padding-top: calc(var(--safe-top) + 16px);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -612,6 +805,139 @@ button:disabled {
   color: var(--muted);
 }
 
+/* ---------- motion ---------- */
+
+/* Press feedback + smooth theme changes on everything tappable or surfaced */
+.btn,
+.row,
+.weigh,
+.icon-btn,
+.add-btn,
+.cal-day,
+.segmented button,
+.nav-title,
+.ring-card,
+.card,
+.list,
+.empty {
+  transition:
+    transform var(--fast) var(--ease),
+    background-color var(--base) var(--ease),
+    border-color var(--base) var(--ease),
+    color var(--base) var(--ease),
+    opacity var(--fast) var(--ease),
+    box-shadow var(--base) var(--ease);
+}
+
+body {
+  transition:
+    background-color var(--base) var(--ease),
+    color var(--base) var(--ease);
+}
+
+.row:active,
+.weigh:active {
+  transform: scale(0.985);
+}
+
+.icon-btn:active {
+  transform: scale(0.92);
+}
+
+.cal-day:not(:disabled):active {
+  transform: scale(0.9);
+}
+
+.segmented button:active {
+  transform: scale(0.97);
+}
+
+/* Content fades up on mount; keyed wrappers replay it on day/range/month change */
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+.enter,
+.screen > :not(.navbar, .sheet, .backdrop),
+.error,
+.saved {
+  animation: enter 0.35s var(--ease) backwards;
+}
+
+/* Log rows cascade in; a newly added row eases in on its own.
+   Animate the whole swipe wrapper, not the row, so the red Delete layer never shows through the fade. */
+.swipe {
+  animation: enter 0.35s var(--ease) backwards;
+  animation-delay: calc(var(--i, 0) * 30ms + 60ms);
+}
+
+/* Rings fill from empty on load, then glide on updates (see .ring .bar transition) */
+@keyframes ring-in {
+  from {
+    stroke-dashoffset: var(--c);
+  }
+}
+
+.ring .bar {
+  animation: ring-in 0.9s var(--ease) backwards;
+}
+
+/* Weight chart: trend line draws left to right, dots fade in along it */
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+.chart-avg {
+  stroke-dasharray: 1;
+  animation: draw 0.9s var(--ease) 0.1s backwards;
+}
+
+.chart-dot {
+  animation: fade-in 0.4s var(--ease) backwards;
+  animation-delay: calc(var(--x, 0) * 600ms);
+}
+
+/* Sheets slide away on close */
+@keyframes sink {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+.sheet.leaving {
+  animation: sink 0.22s var(--ease-in) forwards;
+}
+
+.backdrop.leaving {
+  animation: fade-out 0.22s var(--ease-in) forwards;
+}
+
+/* Login */
+.login-hero {
+  animation: enter 0.5s var(--ease) backwards;
+}
+
+.login .form {
+  animation: enter 0.5s var(--ease) 0.1s backwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -619,4 +945,160 @@ button:disabled {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ---------- weight ---------- */
+
+.weigh {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 52px;
+  margin-top: 12px;
+  padding: 0 16px;
+  background: var(--surface);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  color: var(--muted);
+}
+
+.weigh:active {
+  background: var(--surface-2);
+}
+
+.weigh strong {
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 19px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.weigh strong span {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.weigh-trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.weigh-trend svg {
+  color: var(--pro);
+}
+
+.weigh-trend b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.weigh .weigh-empty {
+  color: var(--pro);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+
+.headline {
+  margin: 4px 4px 16px;
+}
+
+.headline strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 44px;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.headline div {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.headline svg,
+.headline b {
+  color: var(--pro);
+  font-weight: 600;
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.chart-grid {
+  stroke: var(--border);
+  stroke-dasharray: 3 4;
+}
+
+.chart-text {
+  fill: var(--muted);
+  font-size: 10px;
+}
+
+.chart-dot {
+  fill: var(--muted);
+  opacity: 0.45;
+}
+
+.chart-avg {
+  fill: none;
+  stroke: var(--pro);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.legend-dot,
+.legend-line {
+  display: inline-block;
+  background: var(--muted);
+}
+
+.legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  opacity: 0.45;
+}
+
+.legend-line {
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+  margin-left: 10px;
+  background: var(--pro);
+}
+
+.input-big {
+  height: 72px;
+  font-family: var(--font-display);
+  font-size: 32px;
+  text-align: center;
 }

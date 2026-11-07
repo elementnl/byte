@@ -10,7 +10,16 @@ export function Ring({ meter }: { meter: Meter }) {
       <div className="ring" role="img" aria-label={`${meter.label}: ${meter.value} ${meter.unit}, ${meter.caption}`}>
         <svg width="124" height="124" viewBox="0 0 124 124">
           <circle className="track" cx="62" cy="62" r={R} />
-          <circle className="bar" cx="62" cy="62" r={R} stroke={color} strokeDasharray={C} strokeDashoffset={C * (1 - meter.pct)} />
+          <circle
+            className="bar"
+            cx="62"
+            cy="62"
+            r={R}
+            stroke={color}
+            strokeDasharray={C}
+            strokeDashoffset={C * (1 - meter.pct)}
+            style={{ "--c": C } as React.CSSProperties}
+          />
         </svg>
         <div className="ring-value">
           <strong>{meter.value}</strong>

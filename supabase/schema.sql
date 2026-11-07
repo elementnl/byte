@@ -24,3 +24,14 @@ create index if not exists byte_entries_user_date_idx on public.byte_entries (us
 
 alter table public.byte_settings enable row level security;
 alter table public.byte_entries enable row level security;
+
+-- Daily weigh-ins (lb). One per user per day.
+create table if not exists public.byte_weights (
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  date       date not null,
+  weight     numeric(5, 1) not null check (weight > 0 and weight < 1000),
+  created_at timestamptz not null default now(),
+  primary key (user_id, date)
+);
+
+alter table public.byte_weights enable row level security;

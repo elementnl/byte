@@ -20,6 +20,7 @@ export type Day = {
   next: string | null;
   entries: Entry[];
   meters: Meter[];
+  weight: DayWeight;
 };
 
 export type CalendarCell = { date: string; day: number; logged: boolean; disabled: boolean; today: boolean };
@@ -33,3 +34,19 @@ export type Calendar = {
 };
 
 export type Settings = { calorieGoal: number | null; proteinGoal: number | null; theme: Theme };
+
+export type DayWeight = {
+  value: number | null;
+  display: string | null;
+  avg: string | null;
+  direction: "up" | "down" | null; // this week's avg vs last week's
+};
+
+export type Point = { x: number; y: number }; // 0–1, y=0 is top
+
+export type WeightView = {
+  range: string;
+  todayWeight: number | null;
+  headline: { weight: string; change: string; direction: "up" | "down" | null; period: string } | null;
+  chart: { dots: Point[]; avg: Point[]; yLabels: { y: number; label: string }[]; xLabels: [string, string] } | null;
+};

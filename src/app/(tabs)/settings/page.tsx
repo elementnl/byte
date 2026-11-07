@@ -1,12 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { Theme } from "@/constants";
 import type { Settings } from "@/lib/types";
-import { ChevronLeft } from "@/components/Icons";
-import { Splash } from "@/components/Splash";
+import { NavBar } from "@/components/NavBar";
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -44,16 +42,12 @@ export default function SettingsPage() {
     window.location.replace("/login");
   }
 
-  if (!settings) return <Splash />;
+  if (!settings) return <main className="screen"><NavBar title="Settings" /></main>;
 
   return (
     <main className="screen">
-      <header className="topbar">
-        <Link href="/" className="icon-btn" aria-label="Back">
-          <ChevronLeft />
-        </Link>
-      </header>
-      <h1 className="title" style={{ margin: "8px 0 20px" }}>Settings</h1>
+      <NavBar title="Settings" />
+      <div style={{ height: 12 }} />
 
       <form className="card" onSubmit={saveGoals}>
         <h3>Daily goals</h3>

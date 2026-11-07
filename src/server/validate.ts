@@ -22,3 +22,9 @@ export function parseGoal(v: unknown, max: number): number | null | undefined {
   const n = Math.round(num(v));
   return n > 0 && n <= max ? n : undefined;
 }
+
+// Weight in lb, one decimal. null = invalid.
+export function parseWeight(v: unknown): number | null {
+  const w = Math.round(num(v) * 10) / 10;
+  return w > 0 && w < 1000 ? w : null;
+}

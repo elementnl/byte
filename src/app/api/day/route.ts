@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import type { Day, Entry } from "@/lib/types";
 import { context, fail } from "@/server/http";
-import { isDate } from "@/server/dates";
+import { addDays, isDate } from "@/server/dates";
 import { dayMeta, meter, totals } from "@/server/log";
 import { getSettings } from "@/server/settings";
 import { db } from "@/server/supabase";
+import { dayWeight, fetchWeights } from "@/server/weight";
 
 // GET /api/day?date=YYYY-MM-DD (defaults to today)
 export async function GET(req: Request) {
@@ -16,7 +17,7 @@ export async function GET(req: Request) {
   if (!isDate(date)) return fail("Invalid date.");
   if (date > today) return fail("Can't view future days.");
 
-  const [{ data, error }, settings] = await Promise.all([
+  const [{ data, error }, settings, weights] = await Promise.all([
     db()
       .from("byte_entries")
       .select("id, name, protein, calories")
@@ -24,6 +25,7 @@ export async function GET(req: Request) {
       .eq("date", date)
       .order("created_at"),
     getSettings(user.id),
+    fetchWeights(user.id, addDays(date, -12), date).catch(() => []),
   ]);
   if (error) return fail("Couldn't load your log.", 500);
 
@@ -34,6 +36,7 @@ export async function GET(req: Request) {
     ...dayMeta(date, today),
     entries,
     meters: [meter("calories", t.calories, settings.calorieGoal), meter("protein", t.protein, settings.proteinGoal)],
+    weight: dayWeight(weights, date),
   };
   return NextResponse.json(day);
 }
